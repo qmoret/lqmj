@@ -7,6 +7,7 @@ lb = LabelEncoder()
 
 # EDF data
 tr_input = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
+test_input = pd.read_csv("../data_EDF/testing_inputs.csv", sep = ";")
 output = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict"
                      "_which_clients_reduced_their_consumption.csv", sep = ";")
 data_edf = pd.merge(left=tr_input, right=output, how='left', on="ID")
@@ -25,17 +26,25 @@ if False:
 
 shit = ['C1']
 dates = ['S3', 'S4', 'S5']
-codes = ['ID', 'COD_INSEE', 'COD_IRIS']
+codes = ['COD_INSEE', 'COD_IRIS']
 to_many_nas = ['S1', 'S6', 'S7', 'Q6', 'Q7', 'Q15', 'Q17', 'Q18', 'Q26', 'Q35',
                     'Q37', 'Q38', 'Q39', 'Q40', 'Q52', 'Q54', 'Q55','Q56','Q57',
                     'Q73', 'Q74', 'Q75']
 
+data_edf.set_index('ID',inplace = True)
+
 to_drop = shit+dates+codes+to_many_nas
 
-mask = ~data_edf.columns.isin(to_drop)
-X = data_edf.loc[:,mask]
-X.shape
-X.shape[1]
+mask_train = ~data_edf.columns.isin(to_drop)
+X = data_edf.loc[:,mask_train]
+
+test_input.set_index("ID",inplace=True)
+
+mask_test = ~test_input.columns.isin(to_drop)
+test_data = test_input.loc[:,mask_test]
+
+clean_test_data = test_data.dropna()
+filth = test_data[~test_data.index.isin(clean_test_data.index)]
 
 
 # ------------------------------------------------------------------------------
@@ -64,26 +73,26 @@ categ = list(set(categ_all) - set(to_drop))
 
 # Encode
 for a in categ:
-	X[a] = X[a].astype('category')
-	X[a] = lb.fit_transform(X[a])
-# ENEDIS data
-#data_enedis = pd.read_csv("../data_EDF/consommation-electrique-par-secteurs-dactivite.csv", sep = ";")
-
-for a in categ:
+    X[a] = X[a].astype('category')
     X[a] = lb.fit_transform(X[a])
+    clean_test_data[a] = clean_test_data[a].astype('category')
+    clean_test_data[a] = lb.fit_transform(clean_test_data[a])
 
-X['is_train'] = np.random.uniform(0, 1, len(X)) <= .75
+train, test = X, clean_test_data
 
-train, test = X[X['is_train']==True], X[X['is_train']==False]
-
-# features = ['C1', 'C2', 'C3']
 features = list(X)[:-1]
 
-clf = RandomForestClassifier(n_jobs=2)
+clf = RandomForestClassifier(n_jobs=3)
 y, _ = pd.factorize(train['TARGET'])
 clf.fit(train[features], y)
 
-preds = [clf.predict_proba(test[features])]
-#print(preds.head(5))
+print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
 
-#print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
+test['prediction0'] = clf.predict_proba(test[features])[:,0]
+filth['prediction0'] = np.random.uniform()
+
+result = pd.concat([test, filth])
+result['prediction0'].to_csv("result1.csv")
+
+
+print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
