@@ -6,6 +6,21 @@ from sklearn.cross_validation import train_test_split
 from sklearn.model_selection import StratifiedKFold
 import xgboost as xgb
 
+#-------------------------------------------------------------------------------
+# Compare'em
+if False:
+    EDF=set(data_enedis_kept['COD_IRIS'])
+    ENEDIS=set(data_edf['COD_IRIS'])
+    len(EDF-ENEDIS)
+    len(ENEDIS-EDF)
+
+# Merge'em
+data = pd.merge(left=data_edf, right=data_enedis_clusters, how='left', on="COD_IRIS")
+data.shape
+data.head()
+#-------------------------------------------------------------------------------
+
+
 
 train = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
 train_out = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict"

@@ -1,90 +1,68 @@
 import pandas as pd
 import numpy as np
-%pylab inline
-pylab.ion()
+from sklearn.preprocessing import LabelEncoder
 
 # EDF data
 tr_input = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
 output = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict"
                      "_which_clients_reduced_their_consumption.csv", sep = ";")
 data_edf = pd.merge(left=tr_input, right=output, how='left', on="ID")
-data_edf['COD_IRIS'] = data_edf['COD_IRIS'].fillna(0).apply(int)
-data_edf.shape
 
-# ENEDIS data
-data_enedis = pd.read_csv("../data_EDF/consommation-electrique-par-secteurs-dactivite.csv", sep = ";")
-data_enedis.shape
+X = data_edf
 
-# Clean it
-to_keep = ['Code IRIS',
-           'Année',
-           'Nb sites secteur résidentiel Enedis',
-           'Conso totale secteur résidentiel Enedis (MWh)',
-           'Conso moyenne secteur résidentiel Enedis (MWh)']
-data_enedis_kept = data_enedis[to_keep]
-data_enedis_kept = data_enedis_kept.dropna()
-data_enedis_kept.shape
-data_enedis_kept = data_enedis_kept[data_enedis_kept['Code IRIS'].str.find('x')==-1]
-data_enedis_kept['Code IRIS'] = data_enedis_kept['Code IRIS'].apply(int)
-data_enedis_kept.columns = ['COD_IRIS', 'annee', 'nb_sites', 'conso_tot', 'conso_moy']
-
-# Select only 2015...
-#data_enedis_kept = data_enedis_kept[data_enedis_kept['annee'] == 2015]
-
-# ... or group by max year
-idx = data_enedis_kept.groupby(['COD_IRIS'])['annee'].transform(max) == data_enedis_kept['annee']
-
-
-data_enedis_kept = data_enedis_kept[idx]
-data_enedis_kept.shape
-
-
-# Cluster it
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import scale
-from scipy.cluster.hierarchy import dendrogram, linkage
-
-data = data_enedis_kept
-mask = ~data.columns.isin(['COD_IRIS', 'annee'])
-
-X = data.loc[:, mask]
-
-# Evaluate number of clusters with dendrogram
-# Kmeans pour réduire à 1000 groupes
+# ------------------------------------------------------------------------------
+# Column Hardcore Cleaning
+# NAs
 if False:
-    kmeans_ = KMeans(n_clusters=1000, random_state=0).fit(X)
-    X_ = kmeans_.cluster_centers_
-    # Générer la matrice des liens
-    Z = linkage(X_, method='ward', metric='euclidean')
-    # Affichage du dendrogramme
-    plt.title("CLUS")
-    dendrogram(Z, orientation='left', color_threshold=0)
-    plt.show()
+    for c in X.columns:
+        if (sum(X[c].isnull()*100/X.shape[0])>5):
+            print('Colonnes %s : %f' %(c, sum(X[c].isnull()*100/X.shape[0])))
 
-    X = X.T.values #Transpose values
-    Y = pdist(X)
-    Z = linkage(Y)
-    dendrogram(Z, labels = df.columns)
+shit = ['C1']
+dates = ['S3', 'S4', 'S5']
+codes = ['ID', 'COD_INSEE', 'COD_IRIS']
+to_many_nas = ['S1', 'S6', 'S7', 'Q6', 'Q7', 'Q15', 'Q17', 'Q18', 'Q26', 'Q35',
+                    'Q37', 'Q38', 'Q39', 'Q40', 'Q52', 'Q54', 'Q55','Q56','Q57',
+                    'Q73', 'Q74', 'Q75']
 
-# On retient 5 cluster
-kmeans_5 = KMeans(n_clusters=5, random_state=0).fit(X)
-kmeans_5.labels_.shape
+to_drop = shit+dates+codes+to_many_nas
 
-data_enedis_kept['cluster'] = kmeans_5.labels_
+mask = ~data_edf.columns.isin(to_drop)
+X = data_edf.loc[:,mask]
+X.shape
+X.shape[1]
 
-# Check
-data_enedis_kept.groupby(['cluster'])['cluster'].count()
 
-# Compare'em
+# ------------------------------------------------------------------------------
+# dropna
 if False:
-    EDF=set(data_enedis_kept['COD_IRIS'])
-    ENEDIS=set(data_edf['COD_IRIS'])
-    len(EDF-ENEDIS)
-    len(ENEDIS-EDF)
+    X = X.dropna()
+    print(X.shape)
 
-data_enedis_clusters = data_enedis_kept[['COD_IRIS','cluster']]
+# ------------------------------------------------------------------------------
+# Categorical data encoding
 
-# Merge'em
-data = pd.merge(left=data_edf, right=data_enedis_clusters, how='left', on="COD_IRIS")
-data.shape
-data.head()
+# Explore
+if False:
+    for c in X.columns:
+        print('Colonnes %s : %s' %(c, X[c].dtype))
+
+categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
+                'C13', 'C14', 'C15', 'S2', 'Q1', 'Q2', 'Q3', 'Q7', 'Q8', 'Q10',
+                'Q11', 'Q12', 'Q16', 'Q21', 'Q23', 'Q24', 'Q25', 'Q26', 'Q27',
+                'Q28', 'Q29', 'Q32', 'Q34', 'Q36', 'Q39', 'Q53', 'Q54', 'Q55',
+                'Q56', 'Q57', 'Q58', 'Q59', 'Q60', 'Q61', 'Q62', 'Q63', 'Q64',
+                'Q65', 'Q66', 'Q67', 'Q68', 'Q69', 'Q70', 'Q71', 'Q72', 'Q73',
+                'Q74', 'Q75']
+
+categ = list(set(categ_all) - set(to_drop))
+
+# Encode
+lb = LabelEncoder()
+for a in categ:
+	X[a] = X[a].astype('category')
+
+
+for c in X.columns:
+    print("\n========================")
+    print(X.groupby([c])[c].count())
