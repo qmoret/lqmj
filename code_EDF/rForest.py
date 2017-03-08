@@ -40,16 +40,17 @@ X.shape[1]
 
 # ------------------------------------------------------------------------------
 # dropna
-if True:
-    X = X.dropna()
-    print(X.shape)
+
+X = X.dropna()
+
 
 # ------------------------------------------------------------------------------
 # Categorical data encoding
 
 # Explore
-for c in X.columns:
-    print('Colonnes %s : %s' %(c, X[c].dtype))
+if False:
+    for c in X.columns:
+        print('Colonnes %s : %s' %(c, X[c].dtype))
 
 categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
                 'C13', 'C14', 'C15', 'S2', 'Q1', 'Q2', 'Q3', 'Q7', 'Q8', 'Q10',
@@ -82,5 +83,7 @@ clf = RandomForestClassifier(n_jobs=2)
 y, _ = pd.factorize(train['TARGET'])
 clf.fit(train[features], y)
 
-preds = [clf.predict(test[features])]
-print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
+preds = [clf.predict_proba(test[features])]
+#print(preds.head(5))
+
+#print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
