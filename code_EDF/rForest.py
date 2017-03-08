@@ -1,7 +1,13 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
+from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import StratifiedKFold
+from sklearn import neighbors
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import pylab
+
 
 lb = LabelEncoder()
 
@@ -12,23 +18,20 @@ output = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict"
                      "_which_clients_reduced_their_consumption.csv", sep = ";")
 data_edf = pd.merge(left=tr_input, right=output, how='left', on="ID")
 
-X = data_edf
-
 # ------------------------------------------------------------------------------
 # Imputation des valeurs manquantes par plus proche voisins
 
 def fill_na(data):
  
-    n_neighbors = 5
-    sparse_cols = ['sum_mensualite', 'age', 'personne_charges',
-                   'loyer', 'gdf', 'electicite', 'eau', 'assurance_habitat']
-    for col in sparse_cols:
+    n_neighbors = 10
+    cols = list(data)
+    for col in cols:
         if data[col].isnull().sum() > 0:
-            print("%s : %.2f%% de valeurs manquantes" %
+            print("%s : %f%% de valeurs manquantes" %
                   (col, 100 * data[col].isnull().sum() / data.shape[0]))
             knn = neighbors.KNeighborsRegressor(n_neighbors)
             data_temp = data.loc[~data[col].isnull(), :]
-            mask = ~data.columns.isin(sparse_cols + ['id'])
+            mask = ~data.columns.isin(cols)
             X = data_temp.loc[:, mask]
             null_index = data[col].isnull()
             y_ = knn.fit(X, data_temp[col]).predict(data.loc[null_index, mask])
@@ -39,7 +42,6 @@ def fill_na(data):
 
 # ------------------------------------------------------------------------------
 # Column Hardcore Cleaning
-
 
 # NAs
 if False:
@@ -60,6 +62,7 @@ to_drop = shit+dates+codes+to_many_nas
 
 mask_train = ~data_edf.columns.isin(to_drop)
 X = data_edf.loc[:,mask_train]
+X = fill_na(X)
 
 test_input.set_index("ID",inplace=True)
 
@@ -106,25 +109,53 @@ for a in categ:
 # ------------------------------------------------------------------------------
 # Training
 
-train, test = X, clean_test_data
-
+train = X
 features = list(X)[:-1]
 
-clf = RandomForestClassifier(n_jobs=3)
 y, _ = pd.factorize(train['TARGET'])
-clf.fit(train[features], y)
 
-# print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
+# Stratified K folds
+n_splits = 5
+skf = StratifiedKFold(n_splits, shuffle=True)
+accuracies, index = np.zeros(n_splits), 0
+conf_mat = []
 
+# fit model no training data
+ypred = np.zeros(len(y))
+yprob = np.zeros(len(y))
+
+for train_index, test_index in skf.split(X, y):
+    Xtrain, Xtest = X.ix[train_index], X.ix[test_index]
+    ytrain, ytest = y[train_index], y[test_index]
+
+    clf = RandomForestClassifier(n_jobs=3)
+    clf.fit(train[features], ytrain)
+    ypred[test_index] = clf.predict(Xtest)
+    probas = clf.predict_proba(Xtest)
+
+    index_of_class_1 = 1 - ytrain.values[0] # 0 if the first sample is positive, 1 otherwise
+    yprob[test_index] = probas[:, index_of_class_1]
+
+    accuracies[index] = np.mean(ypred == ypred[test_index])
+    index += 1
+
+# ROC curve
+fpr, tpr, tres = metrics.roc_curve(y, yprob, pos_label = 1)
+auc = metrics.auc(fpr, tpr)
+
+plt.plot(fpr, tpr, '-', color='red', label = 'XGB AUC = %.3f' %auc)
+plt.xlabel('False Positive Rate', fontsize=16)
+plt.ylabel('True Positive Rate', fontsize=16)
+plt.title('ROC curves', fontsize=16)
+plt.legend(loc="lower right")
 
 # ------------------------------------------------------------------------------
 # Prediction
 
-test['prediction0'] = clf.predict_proba(test[features])[:,0]
-filth['prediction0'] = np.random.uniform()
+# test = clean_test_data
 
-result = pd.concat([test, filth])
-result['prediction0'].to_csv("result1.csv")
+# test['prediction0'] = clf.predict_proba(test[features])[:,0]
+# filth['prediction0'] = np.random.uniform()
 
-
-print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
+# result = pd.concat([test, filth])
+# result['prediction0'].to_csv("result1.csv")
