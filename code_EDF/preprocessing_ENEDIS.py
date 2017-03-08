@@ -68,3 +68,21 @@ data_enedis_kept['cluster'] = kmeans_5.labels_
 data_enedis_kept.groupby(['cluster'])['cluster'].count()
 
 data_enedis_clusters = data_enedis_kept[['COD_IRIS','cluster']]
+
+# Merge
+X = pd.read_csv("pp_training.csv", index_col=0)
+Xtest = pd.read_csv("pp_testing.csv", index_col=0)
+
+# Check-ups
+if False:
+    EDF = set(data_enedis_kept['COD_IRIS'])
+    ENE = set(X['COD_IRIS'])
+    ENE_test = set(Xtest['COD_IRIS'])
+    len(EDF-ENE)
+    len(ENE-EDF)
+    len(EDF-ENE_test)
+    len(ENE_test-EDF)
+
+# Merge'em
+X_ene = pd.merge(left=X, right=data_enedis_clusters, how='left', left_index=True, right_on="COD_IRIS")
+Xtest_ene = pd.merge(left=X, right=data_enedis_clusters, how='left', on="COD_IRIS")

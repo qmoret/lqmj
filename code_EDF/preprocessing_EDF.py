@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
-training = False
+training = True
 
 if training:
     X = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
@@ -12,11 +12,6 @@ else:
 # ------------------------------------------------------------------------------
 # Column Hardcore Cleaning
 # NAs
-if False:
-    for c in X.columns:
-        if (sum(X[c].isnull()*100/X.shape[0])>5):
-            print('Colonnes %s : %f' %(c, sum(X[c].isnull()*100/X.shape[0])))
-
 shit = ['C1']
 dates = ['S3', 'S4', 'S5']
 codes = ['COD_INSEE', 'COD_IRIS']
@@ -41,13 +36,6 @@ if False:
 # ------------------------------------------------------------------------------
 # Categorical data encoding
 
-# Explore
-if False:
-    for c in X.columns:
-        print('====================================')
-        print(X[c].head(3))
-        print('Colonnes %s : %s' %(c, X[c].dtype))
-
 categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
                 'C13', 'C14', 'C15', 'S2', 'Q1', 'Q2', 'Q3', 'Q7', 'Q8', 'Q10',
                 'Q11', 'Q12', 'Q16', 'Q21', 'Q23', 'Q24', 'Q25', 'Q26', 'Q27',
@@ -58,18 +46,11 @@ categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
 
 categ = list(set(categ_all) - set(to_drop))
 
-
-
 # Encode
 if False:
     lb = LabelEncoder()
     for a in categ:
     	X[a] = X[a].astype('category')
-
-if False:
-    for c in X.columns:
-        print("\n========================")
-        print(X.groupby([c])[c].count())
 
 
 le = LabelEncoder()
@@ -83,11 +64,6 @@ for col, dtype in zip(X.columns, X.dtypes):
         mapping[col] = dict(zip(le.inverse_transform(
             X[col].unique()), X[col].unique()))
 
-if True:
-    for c in X.columns:
-        print('====================================')
-        print(X[c].head(3))
-        print('Colonnes %s : %s' %(c, X[c].dtype))
 
 if training:
     X.to_csv("pp_training.csv")
