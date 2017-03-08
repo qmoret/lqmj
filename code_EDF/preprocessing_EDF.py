@@ -19,17 +19,17 @@ if False:
 
 shit = ['C1']
 dates = ['S3', 'S4', 'S5']
-codes = ['ID', 'COD_INSEE', 'COD_IRIS']
+codes = ['COD_INSEE', 'COD_IRIS']
 to_many_nas = ['S1', 'S6', 'S7', 'Q6', 'Q7', 'Q15', 'Q17', 'Q18', 'Q26', 'Q35',
                     'Q37', 'Q38', 'Q39', 'Q40', 'Q52', 'Q54', 'Q55','Q56','Q57',
                     'Q73', 'Q74', 'Q75']
 
 to_drop = shit+dates+codes+to_many_nas
 
+X.set_index('ID',inplace = True)
+
 mask = ~X.columns.isin(to_drop)
 X = X.loc[:,mask]
-X.shape
-X.shape[1]
 
 
 # ------------------------------------------------------------------------------

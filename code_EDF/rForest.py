@@ -15,6 +15,29 @@ data_edf = pd.merge(left=tr_input, right=output, how='left', on="ID")
 X = data_edf
 
 # ------------------------------------------------------------------------------
+# Imputation des valeurs manquantes par plus proche voisins
+
+def fill_na(data):
+ 
+    n_neighbors = 5
+    sparse_cols = ['sum_mensualite', 'age', 'personne_charges',
+                   'loyer', 'gdf', 'electicite', 'eau', 'assurance_habitat']
+    for col in sparse_cols:
+        if data[col].isnull().sum() > 0:
+            print("%s : %.2f%% de valeurs manquantes" %
+                  (col, 100 * data[col].isnull().sum() / data.shape[0]))
+            knn = neighbors.KNeighborsRegressor(n_neighbors)
+            data_temp = data.loc[~data[col].isnull(), :]
+            mask = ~data.columns.isin(sparse_cols + ['id'])
+            X = data_temp.loc[:, mask]
+            null_index = data[col].isnull()
+            y_ = knn.fit(X, data_temp[col]).predict(data.loc[null_index, mask])
+            data.loc[null_index, col] = y_
+            data[col] = data[col].astype(float)
+ 
+    return data
+
+# ------------------------------------------------------------------------------
 # Column Hardcore Cleaning
 
 
@@ -71,12 +94,17 @@ categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
 
 categ = list(set(categ_all) - set(to_drop))
 
+# ------------------------------------------------------------------------------
 # Encode
+
 for a in categ:
     X[a] = X[a].astype('category')
     X[a] = lb.fit_transform(X[a])
     clean_test_data[a] = clean_test_data[a].astype('category')
     clean_test_data[a] = lb.fit_transform(clean_test_data[a])
+
+# ------------------------------------------------------------------------------
+# Training
 
 train, test = X, clean_test_data
 
@@ -86,7 +114,11 @@ clf = RandomForestClassifier(n_jobs=3)
 y, _ = pd.factorize(train['TARGET'])
 clf.fit(train[features], y)
 
-print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
+# print(pd.crosstab(test['TARGET'], preds, rownames=['actual'], colnames=['preds']))
+
+
+# ------------------------------------------------------------------------------
+# Prediction
 
 test['prediction0'] = clf.predict_proba(test[features])[:,0]
 filth['prediction0'] = np.random.uniform()
