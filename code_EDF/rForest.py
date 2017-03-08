@@ -16,10 +16,12 @@ X = data_edf
 # ------------------------------------------------------------------------------
 # Column Hardcore Cleaning
 
+
 # NAs
-for c in X.columns:
-    if (sum(X[c].isnull()*100/X.shape[0])>5):
-        print('Colonnes %s : %f' %(c, sum(X[c].isnull()*100/X.shape[0])))
+if False:
+    for c in X.columns:
+        if (sum(X[c].isnull()*100/X.shape[0])>5):
+            print('Colonnes %s : %f' %(c, sum(X[c].isnull()*100/X.shape[0])))
 
 shit = ['C1']
 dates = ['S3', 'S4', 'S5']
