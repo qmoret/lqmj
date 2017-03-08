@@ -1,0 +1,15 @@
+.ipynb_checkpoints/
+*.csv
+*.pyc
+.DS_Store
+.idea/
+__pycache__/
+
+Données_EDF/*
+donnees_Suez/*
+
+cresus_exploration.ipynb
+data_preprocessing.py
+
+*.sublime-project
+*.sublime-workspace
