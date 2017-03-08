@@ -8,6 +8,7 @@ __pycache__/
 Données_EDF/*
 donnees_Suez/*
 data_EDF/*
+data_SUEZ/*
 
 cresus_exploration.ipynb
 data_preprocessing.py
