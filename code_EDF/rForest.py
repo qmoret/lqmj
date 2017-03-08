@@ -11,24 +11,67 @@ output = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict"
                      "_which_clients_reduced_their_consumption.csv", sep = ";")
 data_edf = pd.merge(left=tr_input, right=output, how='left', on="ID")
 
-#S3-S7 : dates
-to_drop = ['ID', 'COD_INSEE', 'COD_IRIS', 'S1', 'S3', 'S4', 'S5', 'S6', 'S7', 'Q6', 'Q7', 'Q15', 'Q17', 'Q18', 'Q37', 'Q38', 'Q39', 'Q40', 'Q52', 'Q73', 'Q74', 'Q75']
+X = data_edf
+
+# ------------------------------------------------------------------------------
+# Column Hardcore Cleaning
+
+# NAs
+for c in X.columns:
+    if (sum(X[c].isnull()*100/X.shape[0])>5):
+        print('Colonnes %s : %f' %(c, sum(X[c].isnull()*100/X.shape[0])))
+
+shit = ['C1']
+dates = ['S3', 'S4', 'S5']
+codes = ['ID', 'COD_INSEE', 'COD_IRIS']
+to_many_nas = ['S1', 'S6', 'S7', 'Q6', 'Q7', 'Q15', 'Q17', 'Q18', 'Q26', 'Q35',
+                    'Q37', 'Q38', 'Q39', 'Q40', 'Q52', 'Q54', 'Q55','Q56','Q57',
+                    'Q73', 'Q74', 'Q75']
+
+to_drop = shit+dates+codes+to_many_nas
+
 mask = ~data_edf.columns.isin(to_drop)
 X = data_edf.loc[:,mask]
+X.shape
+X.shape[1]
 
-#data_edf.drop(to_drop,inplace=True,axis=1)
-X.dropna()
 
-categorical = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12', 'C13', 'C14', 'C15', 'S2', 'Q1', 'Q2', 'Q3', 'Q8', 'Q10', 'Q11', 'Q12', 'Q16', 'Q21', 'Q23', 'Q24', 'Q25', 'Q26', 'Q27', 'Q28', 'Q29', 'Q32', 'Q34', 'Q36', 'Q53', 'Q54', 'Q55', 'Q56', 'Q57', 'Q58', 'Q59', 'Q60', 'Q61', 'Q62', 'Q63', 'Q64', 'Q65', 'Q66', 'Q67', 'Q68', 'Q69', 'Q70', 'Q71', 'Q72']
+# ------------------------------------------------------------------------------
+# dropna
+if True:
+    X = X.dropna()
+    print(X.shape)
 
-#categorical = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12', 'C13', 'C14', 'C15', 'S2', 'Q1', 'Q2', 'Q3', 'Q7', 'Q8', 'Q10', 'Q11', 'Q12', 'Q16', 'Q21', 'Q23', 'Q24', 'Q25', 'Q26', 'Q27', 'Q28', 'Q29', 'Q32', 'Q34', 'Q36', 'Q39', 'Q53', 'Q54', 'Q55', 'Q56', 'Q57', 'Q58', 'Q59', 'Q60', 'Q61', 'Q62', 'Q63', 'Q64', 'Q65', 'Q66', 'Q67', 'Q68', 'Q69', 'Q70', 'Q71', 'Q72', 'Q73', 'Q74', 'Q75']
+# ------------------------------------------------------------------------------
+# Categorical data encoding
 
-for a in categorical:
+# Explore
+for c in X.columns:
+    print('Colonnes %s : %s' %(c, X[c].dtype))
+
+categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
+                'C13', 'C14', 'C15', 'S2', 'Q1', 'Q2', 'Q3', 'Q7', 'Q8', 'Q10',
+                'Q11', 'Q12', 'Q16', 'Q21', 'Q23', 'Q24', 'Q25', 'Q26', 'Q27',
+                'Q28', 'Q29', 'Q32', 'Q34', 'Q36', 'Q39', 'Q53', 'Q54', 'Q55',
+                'Q56', 'Q57', 'Q58', 'Q59', 'Q60', 'Q61', 'Q62', 'Q63', 'Q64',
+                'Q65', 'Q66', 'Q67', 'Q68', 'Q69', 'Q70', 'Q71', 'Q72', 'Q73',
+                'Q74', 'Q75']
+
+categ = list(set(categ_all) - set(to_drop))
+
+# Encode
+for a in categ:
 	X[a] = X[a].astype('category')
 	X[a] = lb.fit_transform(X[a])
 # ENEDIS data
 #data_enedis = pd.read_csv("../data_EDF/consommation-electrique-par-secteurs-dactivite.csv", sep = ";")
 
+X['C1']
+lb.fit_transform(X['C1'])
+X.groupby(['C1'])['C1'].count()
+
+for a in categorical:
+    X[a] = lb.fit_transform(X[a])
 
 X['is_train'] = np.random.uniform(0, 1, len(X)) <= .75
 

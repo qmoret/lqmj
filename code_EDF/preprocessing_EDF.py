@@ -46,6 +46,7 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 
 data = data_enedis_kept
 mask = ~data.columns.isin(['COD_IRIS', 'annee'])
+
 X = data.loc[:, mask]
 
 # Evaluate number of clusters with dendrogram
@@ -70,6 +71,8 @@ kmeans_5 = KMeans(n_clusters=5, random_state=0).fit(X)
 kmeans_5.labels_.shape
 
 data_enedis_kept['cluster'] = kmeans_5.labels_
+
+# Check
 data_enedis_kept.groupby(['cluster'])['cluster'].count()
 
 # Compare'em
