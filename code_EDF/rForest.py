@@ -66,11 +66,7 @@ for a in categ:
 # ENEDIS data
 #data_enedis = pd.read_csv("../data_EDF/consommation-electrique-par-secteurs-dactivite.csv", sep = ";")
 
-X['C1']
-lb.fit_transform(X['C1'])
-X.groupby(['C1'])['C1'].count()
-
-for a in categorical:
+for a in categ:
     X[a] = lb.fit_transform(X[a])
 
 X['is_train'] = np.random.uniform(0, 1, len(X)) <= .75
