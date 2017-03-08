@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(\"readr\")\n\noutput <- read_delim(\"/Volumes/Data/Cours/Centrale/3A/Monaco/lqmj/data_EDF/challenge_output_data_training_file_predict_which_clients_reduced_their_consumption.csv\", \";\", escape_double = FALSE, trim_ws = TRUE)\nconso <- read_delim(\"/Volumes/Data/Cours/Centrale/3A/Monaco/lqmj/data_EDF/consommation-electrique-par-secteurs-dactivite.csv\", \";\", escape_double = FALSE, trim_ws = TRUE)\ntraining <- read_delim(\"/Volumes/Data/Cours/Centrale/3A/Monaco/lqmj/data_EDF/training_inputs.csv\", \";\", escape_double = FALSE, trim_ws = TRUE)\ntesting <- read_delim(\"/Volumes/Data/Cours/Centrale/3A/Monaco/lqmj/data_EDF/testing_inputs.csv\", \";\", escape_double = FALSE, trim_ws = TRUE)\n\ntesting$COD_IRIS[!testing$COD_IRIS %in% conso$\"INSEE IRIS\"]\ntesting$COD_IRIS[testing$COD_IRIS %in% conso$\"INSEE IRIS\"]\n",
+    "created" : 1488962273080.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3409718754",
+    "id" : "A7944AA7",
+    "lastKnownWriteTime" : 1488963608,
+    "last_content_update" : 1488963610299,
+    "path" : "/Volumes/Data/Cours/Centrale/3A/Monaco/lqmj/code_EDF/Proto R/main.r",
+    "project_path" : "main.r",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
