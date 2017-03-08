@@ -2,13 +2,12 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
-# EDF data
-tr_input = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
-output = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict"
-                     "_which_clients_reduced_their_consumption.csv", sep = ";")
-data_edf = pd.merge(left=tr_input, right=output, how='left', on="ID")
+training = False
 
-X = data_edf
+if training:
+    X = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
+else:
+    X = pd.read_csv("../data_EDF/testing_inputs.csv", sep = ";")
 
 # ------------------------------------------------------------------------------
 # Column Hardcore Cleaning
@@ -27,8 +26,8 @@ to_many_nas = ['S1', 'S6', 'S7', 'Q6', 'Q7', 'Q15', 'Q17', 'Q18', 'Q26', 'Q35',
 
 to_drop = shit+dates+codes+to_many_nas
 
-mask = ~data_edf.columns.isin(to_drop)
-X = data_edf.loc[:,mask]
+mask = ~X.columns.isin(to_drop)
+X = X.loc[:,mask]
 X.shape
 X.shape[1]
 
@@ -45,6 +44,8 @@ if False:
 # Explore
 if False:
     for c in X.columns:
+        print('====================================')
+        print(X[c].head(3))
         print('Colonnes %s : %s' %(c, X[c].dtype))
 
 categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
@@ -57,12 +58,38 @@ categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
 
 categ = list(set(categ_all) - set(to_drop))
 
+
+
 # Encode
-lb = LabelEncoder()
-for a in categ:
-	X[a] = X[a].astype('category')
+if False:
+    lb = LabelEncoder()
+    for a in categ:
+    	X[a] = X[a].astype('category')
+
+if False:
+    for c in X.columns:
+        print("\n========================")
+        print(X.groupby([c])[c].count())
 
 
-for c in X.columns:
-    print("\n========================")
-    print(X.groupby([c])[c].count())
+le = LabelEncoder()
+mapping = dict()
+for col, dtype in zip(X.columns, X.dtypes):
+    if dtype == 'object':
+        X[col] = X[col].apply(lambda s: str(s))
+        # Replace 0 and NaNs with unique label : 'None'
+        #data[col] = data[col].where(~data[col].isin(['0', 'nan']), 'None')
+        X[col] = le.fit_transform(X[col])
+        mapping[col] = dict(zip(le.inverse_transform(
+            X[col].unique()), X[col].unique()))
+
+if True:
+    for c in X.columns:
+        print('====================================')
+        print(X[c].head(3))
+        print('Colonnes %s : %s' %(c, X[c].dtype))
+
+if training:
+    X.to_csv("pp_training.csv")
+else:
+    X.to_csv("pp_testing.csv")
