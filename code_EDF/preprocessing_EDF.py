@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
+from sklearn import neighbors
 from sklearn.preprocessing import LabelEncoder
 
 training = True
+imputation = True
 
 if training:
     X = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
@@ -25,13 +27,6 @@ X.set_index('ID',inplace = True)
 
 mask = ~X.columns.isin(to_drop)
 X = X.loc[:,mask]
-
-
-# ------------------------------------------------------------------------------
-# dropna
-if False:
-    X = X.dropna()
-    print(X.shape)
 
 # ------------------------------------------------------------------------------
 # Categorical data encoding
@@ -63,6 +58,41 @@ for col, dtype in zip(X.columns, X.dtypes):
         X[col] = le.fit_transform(X[col])
         mapping[col] = dict(zip(le.inverse_transform(
             X[col].unique()), X[col].unique()))
+
+# ------------------------------------------------------------------------------
+# NAN
+
+if imputation:
+    sparse_cols = list()
+    for i, c in enumerate(X.columns):
+        if sum(X[c].isnull())>0:
+            sparse_cols += [c]
+
+    len(sparse_cols)
+    X.shape[1]
+
+    def fill_na(data):
+        n_neighbors = 5
+        for col in sparse_cols:
+            print(col)
+            if data[col].isnull().sum() > 0:
+                print("%s : %f%% de valeurs manquantes" %
+                      (col, 100 * data[col].isnull().sum() / data.shape[0]))
+                knn = neighbors.KNeighborsRegressor(n_neighbors)
+                data_temp = data.loc[~data[col].isnull(), :]
+                mask = ~data.columns.isin(sparse_cols)
+                X = data_temp.loc[:, mask]
+                null_index = data[col].isnull()
+                y_ = knn.fit(X, data_temp[col]).predict(data.loc[null_index, mask])
+                data.loc[null_index, col] = y_
+                data[col] = data[col].astype(float)
+        return data
+    X = fill_na(X)
+
+
+if False:
+    X = X.dropna()
+    print(X.shape)
 
 
 if training:

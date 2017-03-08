@@ -7,6 +7,7 @@ from sklearn.model_selection import StratifiedKFold
 import xgboost as xgb
 import matplotlib.pyplot as plt
 import pylab
+from sklearn import neighbors
 pylab.ion()
 
 X = pd.read_csv("preprocessed_edf.csv", index_col=0)
