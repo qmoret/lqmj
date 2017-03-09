@@ -5,25 +5,39 @@ from sklearn.preprocessing import LabelEncoder
 
 training = True
 imputation = True
+enedis = True
 
 if training:
     X = pd.read_csv("../data_EDF/training_inputs.csv", sep = ";")
 else:
     X = pd.read_csv("../data_EDF/testing_inputs.csv", sep = ";")
 
+
+
+# ------------------------------------------------------------------------------
+# Enedis cluster
+# Merge
+X.shape
+if enedis:
+    C = pd.read_csv('clusters.csv', index_col=0)
+    X = pd.merge(left=X, right=C, how='left', on="COD_IRIS")
+X.shape
+
+sum(X['cluster'].isnull())
+
 # ------------------------------------------------------------------------------
 # Column Hardcore Cleaning
 # NAs
 shit = ['C1']
 dates = ['S3', 'S4', 'S5']
-codes = ['COD_INSEE', 'COD_IRIS']
+codes = ['ID', 'COD_INSEE', 'COD_IRIS']
 to_many_nas = ['S1', 'S6', 'S7', 'Q6', 'Q7', 'Q15', 'Q17', 'Q18', 'Q26', 'Q35',
                     'Q37', 'Q38', 'Q39', 'Q40', 'Q52', 'Q54', 'Q55','Q56','Q57',
                     'Q73', 'Q74', 'Q75']
 
 to_drop = shit+dates+codes+to_many_nas
 
-X.set_index('ID',inplace = True)
+#X.set_index('ID',inplace = True)
 
 mask = ~X.columns.isin(to_drop)
 X = X.loc[:,mask]
@@ -32,7 +46,7 @@ X = X.loc[:,mask]
 # Categorical data encoding
 
 categ_all = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C12',
-                'C13', 'C14', 'C15', 'S2', 'Q1', 'Q2', 'Q3', 'Q7', 'Q8', 'Q10',
+                'C13', 'C14', 'S2', 'Q1', 'Q2', 'Q3', 'Q7', 'Q8', 'Q10',
                 'Q11', 'Q12', 'Q16', 'Q21', 'Q23', 'Q24', 'Q25', 'Q26', 'Q27',
                 'Q28', 'Q29', 'Q32', 'Q34', 'Q36', 'Q39', 'Q53', 'Q54', 'Q55',
                 'Q56', 'Q57', 'Q58', 'Q59', 'Q60', 'Q61', 'Q62', 'Q63', 'Q64',
@@ -94,8 +108,25 @@ if False:
     X = X.dropna()
     print(X.shape)
 
-
-if training:
-    X.to_csv("pp_training.csv")
+if enedis:
+    if imputation:
+        if training:
+            X.to_csv("pp_training_e_i.csv")
+        else:
+            X.to_csv("pp_testing_e_i.csv")
+    else:
+        if training:
+            X.to_csv("pp_training_e.csv")
+        else:
+            X.to_csv("pp_testing_e.csv")
 else:
-    X.to_csv("pp_testing.csv")
+    if imputation:
+        if training:
+            X.to_csv("pp_training_i.csv")
+        else:
+            X.to_csv("pp_testing_i.csv")
+    else:
+        if training:
+            X.to_csv("pp_training.csv")
+        else:
+            X.to_csv("pp_testing.csv")
