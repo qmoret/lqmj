@@ -3,8 +3,6 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import scale
 from scipy.cluster.hierarchy import dendrogram, linkage
-%pylab inline
-pylab.ion()
 
 # ENEDIS data
 data_enedis = pd.read_csv("../data_EDF/consommation-electrique-par-secteurs-dactivite.csv", sep = ";")

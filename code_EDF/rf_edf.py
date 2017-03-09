@@ -35,7 +35,7 @@ for train_index, test_index in skf.split(X, y):
     Xtrain, Xtest = X.ix[train_index], X.ix[test_index]
     ytrain, ytest = y[train_index], y[test_index]
 
-    rfc = GridSearchCV(RandomForestClassifier(), param_grid, scoring= 'roc_auc')
+    rfc = GridSearchCV(RandomForestClassifier(n_jobs=2), param_grid, scoring= 'roc_auc')
     rfc.fit(Xtrain, ytrain)
     ypred[test_index] = rfc.predict(Xtest)
     probas = rfc.predict_proba(Xtest)
@@ -87,4 +87,4 @@ ynew_proba = rfc.predict_proba(Xnew)[:,1]
 getin = pd.read_csv("../data_EDF/testing_inputs.csv", sep = ";", usecols=[1])
 sub = pd.DataFrame(ynew_proba, index=getin.index)
 
-sub.to_csv("xgb_submission.csv")
+sub.to_csv("rfc_submission.csv")

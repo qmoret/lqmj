@@ -11,7 +11,7 @@ import pylab
 from sklearn import neighbors
 pylab.ion()
 
-X = pd.read_csv("pp_training_i.csv", index_col=0)
+X = pd.read_csv("pp_training_e_i.csv", index_col=0)
 
 y = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict_which_"
                      "clients_reduced_their_consumption.csv", sep = ";",
@@ -48,9 +48,6 @@ for train_index, test_index in skf.split(X, y):
 
     index_of_class_1 = 1 - ytrain.values[0] # 0 if the first sample is positive, 1 otherwise
     yprob[test_index] = probas[:, index_of_class_1]
-
-    accuracies[index] = np.mean(ypred == ypred[test_index])
-    index += 1
 
     print(xgc.best_estimator_)
 
