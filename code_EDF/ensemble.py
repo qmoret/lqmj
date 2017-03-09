@@ -17,14 +17,11 @@ y = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict_which_"
                      usecols = [1])
 y = y['TARGET']
 
+ens_prob = 0.4*Xx['0']+0.5*Xr['0']+0.1*Xl['0']
 
-ens_prob = 0.4*Xx['xgb_proba']+0.5*Xr["rf_proba"]+0.1*Xl["las"]
 
-fpr, tpr, tres = metrics.roc_curve(y, ens_prob, pos_label = 1)
-auc = metrics.auc(fpr, tpr)
-auc
 
 getin = pd.read_csv("../data_EDF/testing_inputs.csv", sep = ";", usecols=[1])
 ens_sub = pd.DataFrame(ens_prob, index=getin.index)
 
-ens_sub.to_csv("ens_submission.csv")
+ens_sub.to_csv("ens_submission.csv", header=False)

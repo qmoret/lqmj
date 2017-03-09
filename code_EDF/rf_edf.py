@@ -74,10 +74,10 @@ rf.to_csv("rf.csv")
 
 #-------------------------------------------------------------------------------
 # New predictions
-Xnew = pd.read_csv("pp_testing_i.csv", index_col=0)
+Xnew = pd.read_csv("pp_testing_e_i.csv", index_col=0)
 
 # Fit on all data
-rfc = RandomForestClassifier(n_jobs=2, n_estimators=n_trees, max_depth=max_d)
+rfc = RandomForestClassifier(n_jobs=2, n_estimators=400, max_depth=10)
 rfc.fit(X, y)
 
 # Predict

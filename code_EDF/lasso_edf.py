@@ -18,7 +18,7 @@ y = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict_which_"
 y = y['TARGET']
 
 # Lasso parameters
-param_grid = {'alpha':[0.0001, 0.001, 0.01]}
+param_grid = {'alpha':[0.003]}
 
 #-------------------------------------------------------------------------------
 # Model evaluation
@@ -61,15 +61,14 @@ las.to_csv("las.csv")
 
 #-------------------------------------------------------------------------------
 # New predictions
-Xnew = pd.read_csv("pp_testing_i.csv", index_col=0)
+Xnew = pd.read_csv("pp_testing_e_i.csv", index_col=0)
 
 # Fit on all data
-las = Lasso(alpha=0.0001)
+las = Lasso(alpha=0.003)
 las.fit(X, y)
-yprob[test_index] = las.predict(Xnew)
 
 # Predict
-ynew_proba = rfc.predict(Xnew)
+ynew_proba = las.predict(Xnew)
 
 getin = pd.read_csv("../data_EDF/testing_inputs.csv", sep = ";", usecols=[1])
 sub = pd.DataFrame(ynew_proba, index=getin.index)

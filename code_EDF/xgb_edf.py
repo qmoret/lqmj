@@ -70,10 +70,10 @@ xgboo.to_csv("xgboo.csv")
 
 #-------------------------------------------------------------------------------
 # New predictions
-Xnew = pd.read_csv("pp_testing_i.csv", index_col=0)
+Xnew = pd.read_csv("pp_testing_e_i.csv", index_col=0)
 
 # Fit on all data
-model = xgb.XGBClassifier(max_depth=max_dep, n_estimators=n_trees, objective=obj)
+model = xgb.XGBClassifier(max_depth=5, n_estimators=200, objective=obj)
 model.fit(X, y)
 
 # Predict

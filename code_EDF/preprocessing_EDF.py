@@ -3,7 +3,7 @@ import numpy as np
 from sklearn import neighbors
 from sklearn.preprocessing import LabelEncoder
 
-training = True
+training = False
 imputation = True
 enedis = True
 
