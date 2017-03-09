@@ -4,6 +4,7 @@ from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
 import pylab
@@ -17,8 +18,7 @@ y = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict_which_"
 y = y['TARGET']
 
 # RFC parameters
-n_trees = 300
-max_d = 10
+param_grid = {'n_estimators':[100, 200, 300, 400], 'max_depth':[3,5,7,10]}
 
 #-------------------------------------------------------------------------------
 # Model evaluation
@@ -35,13 +35,15 @@ for train_index, test_index in skf.split(X, y):
     Xtrain, Xtest = X.ix[train_index], X.ix[test_index]
     ytrain, ytest = y[train_index], y[test_index]
 
-    model = RandomForestClassifier(n_jobs=2, n_estimators=n_trees, max_depth=max_d)
-    model.fit(Xtrain, ytrain)
-    ypred[test_index] = model.predict(Xtest)
-    probas = model.predict_proba(Xtest)
+    rfc = GridSearchCV(RandomForestClassifier(), param_grid, scoring= 'roc_auc')
+    rfc.fit(Xtrain, ytrain)
+    ypred[test_index] = rfc.predict(Xtest)
+    probas = rfc.predict_proba(Xtest)
 
     index_of_class_1 = 1 - ytrain.values[0] # 0 if the first sample is positive, 1 otherwise
     yprob[test_index] = probas[:, index_of_class_1]
+
+    print(rfc.best_estimator_)
 
 # ROC curve
 fpr, tpr, tres = metrics.roc_curve(y, yprob, pos_label = 1)

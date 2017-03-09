@@ -4,6 +4,7 @@ from sklearn import metrics
 from sklearn.linear_model import Lasso
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
 import pylab
@@ -16,10 +17,8 @@ y = pd.read_csv("../data_EDF/challenge_output_data_training_file_predict_which_"
                      usecols = [1])
 y = y['TARGET']
 
-
-X=pd.DataFrame(scale(X))
 # Lasso parameters
-alpha = 0.0001
+param_grid = {'alpha':[0.0001, 0.001, 0.01]}
 
 #-------------------------------------------------------------------------------
 # Model evaluation
@@ -36,9 +35,11 @@ for train_index, test_index in skf.split(X, y):
     Xtrain, Xtest = X.ix[train_index], X.ix[test_index]
     ytrain, ytest = y[train_index], y[test_index]
 
-    las = Lasso(alpha=alpha)
+    las = GridSearchCV(Lasso(), param_grid, scoring= 'roc_auc')
     las.fit(Xtrain, ytrain)
     yprob[test_index] = las.predict(Xtest)
+
+    print(las.best_estimator_)
 
 # ROC curve
 fpr, tpr, tres = metrics.roc_curve(y, yprob, pos_label = 1)
@@ -63,14 +64,14 @@ las.to_csv("las.csv")
 Xnew = pd.read_csv("pp_testing_i.csv", index_col=0)
 
 # Fit on all data
-rfc = RandomForestClassifier(n_jobs=2, n_estimators=n_trees, max_depth=max_d)
-rfc.fit(X, y)
+las = Lasso(alpha=0.0001)
+las.fit(X, y)
+yprob[test_index] = las.predict(Xnew)
 
 # Predict
-ynew_pred = rfc.predict(Xnew)
-ynew_proba = rfc.predict_proba(Xnew)[:,1]
+ynew_proba = rfc.predict(Xnew)
 
 getin = pd.read_csv("../data_EDF/testing_inputs.csv", sep = ";", usecols=[1])
 sub = pd.DataFrame(ynew_proba, index=getin.index)
 
-sub.to_csv("xgb_submission.csv")
+sub.to_csv("las_submission.csv")

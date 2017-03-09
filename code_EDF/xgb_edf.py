@@ -3,6 +3,7 @@ import numpy as np
 from sklearn import metrics
 from sklearn.cross_validation import train_test_split
 from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import scale
 import xgboost as xgb
 import matplotlib.pyplot as plt
@@ -22,6 +23,7 @@ num_round = 20
 max_dep=6
 n_trees=200
 obj='binary:logistic'
+param_grid = {'n_estimators':[100, 200, 300, 400], 'max_depth':[3,5,7,10]}
 
 #-------------------------------------------------------------------------------
 # Model evaluation
@@ -39,16 +41,18 @@ for train_index, test_index in skf.split(X, y):
     Xtrain, Xtest = X.ix[train_index], X.ix[test_index]
     ytrain, ytest = y[train_index], y[test_index]
 
-    model = xgb.XGBClassifier(max_depth=10, n_estimators=200, objective='binary:logistic')
-    model.fit(Xtrain, ytrain)
-    ypred[test_index] = model.predict(Xtest)
-    probas = model.predict_proba(Xtest)
+    xgc = GridSearchCV(xgb.XGBClassifier(objective='binary:logistic'), param_grid, scoring='roc_auc')
+    xgc.fit(Xtrain, ytrain)
+    ypred[test_index] = xgc.predict(Xtest)
+    probas = xgc.predict_proba(Xtest)
 
     index_of_class_1 = 1 - ytrain.values[0] # 0 if the first sample is positive, 1 otherwise
     yprob[test_index] = probas[:, index_of_class_1]
 
     accuracies[index] = np.mean(ypred == ypred[test_index])
     index += 1
+
+    print(xgc.best_estimator_)
 
 # ROC curve
 fpr, tpr, tres = metrics.roc_curve(y, yprob, pos_label = 1)
